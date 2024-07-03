@@ -18,7 +18,6 @@ class FaceMeshDetector:
                                                  refine_landmarks=refine_landmarks,
                                                  min_detection_confidence=min_detection_confidence,
                                                  min_tracking_confidence=min_tracking_confidence)
-        # self.drawSpecs = self.mpDraw.DrawingSpec(thickness=2, circle_radius=1, color=(0, 255, 0))
 
     def getFaceMesh(self, img, draw=True):
         img = cv2.resize(img, (1200, 720))
@@ -30,16 +29,12 @@ class FaceMeshDetector:
         if results.multi_face_landmarks:
             for faceLms in results.multi_face_landmarks:
                 if draw:
-                    # self.mpDraw.draw_landmarks(img, faceLms, self.mpFaceMesh.FACEMESH_CONTOURS, self.drawSpecs,
-                    #                            self.drawSpecs)
                     self.mpDraw.draw_landmarks(img, faceLms, self.mpFaceMesh.FACEMESH_CONTOURS)
 
                 face = []
-                for i, lm in enumerate(faceLms.landmark):
-                    h, w, c = img.shape
+                for lm in faceLms.landmark:
+                    h, w, _ = img.shape
                     cx, cy = int(lm.x * w), int(lm.y * h)
-                    # cv2.putText(img, f"{i}", (cx, cy), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 0), 1)
-                    # print(i, cx, cy)
                     face.append([cx, cy])
                 faces.append(face)
 
@@ -54,19 +49,23 @@ def main():
 
     while True:
         success, img = cap.read()
-        img, faces = detector.getFaceMesh(img, draw=True)
+        if not success:
+            break
 
-        # if len(faces) != 0:
-        #     print(faces)
+        img, faces = detector.getFaceMesh(img, draw=True)
 
         cTime = time.time()
         fps = 1 / (cTime - pTime)
         pTime = cTime
 
-        cv2.putText(img, f"FPS: {str(int(fps))}", (10, 30), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 2)
+        cv2.putText(img, f"FPS: {int(fps)}", (10, 30), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 2)
 
         cv2.imshow("Image", img)
-        cv2.waitKey(1)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
